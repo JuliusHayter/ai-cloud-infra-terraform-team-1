@@ -33,3 +33,20 @@ variable "tx_topic" {
   type        = string
   default     = "projects/cymbal-fraudfinder/topics/ff-tx"
 }
+
+variable "history_topic" {
+  description = "Topic historisé dans BigQuery (séance 4)."
+  type        = string
+  default     = "projects/advanced-cloud-ai/topics/ff-replay"
+}
+
+variable "feature_source" {
+  description = "Source des compteurs lus par le service : parquet, bigquery ou firestore (séance 4)."
+  type        = string
+  default     = "parquet"
+
+  validation {
+    condition     = contains(["parquet", "bigquery", "firestore"], var.feature_source)
+    error_message = "feature_source vaut parquet, bigquery ou firestore."
+  }
+}
