@@ -81,6 +81,26 @@ resource "google_cloud_run_v2_service" "api" {
         value = "1"
       }
 
+      env {
+        name  = "FEATURE_SOURCE"
+        value = var.feature_source
+      }
+
+      env {
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = var.project_id
+      }
+
+      env {
+        name  = "BQ_DATASET"
+        value = local.dataset
+      }
+
+      env {
+        name  = "FIRESTORE_DATABASE"
+        value = var.team
+      }
+
       volume_mounts {
         name       = "models"
         mount_path = "/mnt/models"
