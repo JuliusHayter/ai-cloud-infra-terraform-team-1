@@ -5,3 +5,4 @@
 crash.log
 .DS_Store
 terraform.tfvars
+kyc_embeddings.parquet
