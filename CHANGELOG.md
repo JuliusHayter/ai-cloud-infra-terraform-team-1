@@ -4,6 +4,9 @@
 
 ### Added
 
+- Séance 5 : énoncé (`docs/seance-5.md`), squelette `docs/seance-5/job.tf` (job Cloud Run
+  d'entraînement et de recherche, compte `<équipe>-train`, sortie VPC vers la base Optuna), script
+  `custom-job.sh` (entraînement final en custom job Vertex AI), modèle de compte rendu.
 - Séance 4 : énoncé (`docs/seance-4.md`), squelettes `docs/seance-4/` (abonnement BigQuery, SQL des
   compteurs, droits du compte d'exécution, base vectorielle Qdrant), scripts `publish_features.py` et
   `kyc_vectors.py`, modèle de compte rendu, variables `history_topic` et `feature_source`.

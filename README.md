@@ -27,6 +27,8 @@ vous en protège. Vérifiez le nom avant chaque suppression.
 | `docs/seance-2.md` | énoncé de la séance 2 : déployer le service de scoring sur Cloud Run |
 | `docs/seance-3.md` | énoncé de la séance 3 : brancher le service sur un flux Pub/Sub |
 | `docs/seance-3/` | squelette `pubsub.tf`, exemple d'enveloppe push, modèle de compte rendu |
+| `docs/seance-5.md` | énoncé de la séance 5 : réentraîner le scorer en job, recherche parallèle, règle d'entrée au registre |
+| `docs/seance-5/` | squelette `job.tf`, script `custom-job.sh` (Vertex AI), modèle de compte rendu |
 
 ## Outils à installer
 
