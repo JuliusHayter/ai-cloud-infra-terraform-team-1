@@ -271,19 +271,9 @@ qui provisionne une machine, lance le conteneur et la rend. Puis vous appliquez 
 
    Lisez `custom-job.sh` : image, type de machine, compte de service `team1-train`, durée maximale
    (45 minutes), et le même `train.job` qu'à l'étape 1, avec `--train large` et `--params`.
-3. Pendant qu'il tourne, mesurez l'effet des threads sur moins de données : trois custom jobs
-   sur 3 mois (2026-05 à 2026-07), à 1, 4 et 8 threads :
-
-   ```bash
-   for t in 1 4 8; do
-     docs/seance-5/custom-job.sh team1 n2-standard-8 $t 2026-05 \
-       /gcs/advanced-cloud-ai-models/runs/team1/search/w8-t1/best.json
-   done
-   ```
-
-   Pour chaque run, relevez dans `metadata.json` : `durations_s` (`load`, `fit`), `rows.train`,
-   `config.threads`, `valid.ap`.
-4. Appliquez la règle d'entrée **une seule fois**, sur le modèle 12 mois. `train.gate` est lancé par
+   Lancez **un seul** custom job par équipe. À la fin, relevez dans `metadata.json` :
+   `durations_s` (`load`, `fit`), `rows.train`, `config.threads`, `valid.ap`.
+3. Appliquez la règle d'entrée **une seule fois**, sur le modèle 12 mois. `train.gate` est lancé par
    votre job Cloud Run, avec **une seule tâche** :
 
    ```bash
@@ -319,8 +309,8 @@ refus motivé par l'intervalle.
    de la même recette avec deux graines différentes n'ont pas exactement la même AP ?
 3. Pourquoi la décision ne se prend-elle pas sur la validation, qui a servi à choisir les
    hyperparamètres ?
-4. Sur vos trois runs de 3 mois, que rapportent 4 puis 8 threads ? La lecture des données
-   change-t-elle ?
+4. Comparez `load` et `fit` de ce run à ceux de l'étape 1 : pour douze fois plus de mois, qu'est-ce
+   qui a le plus augmenté ? Qu'ont rapporté les 8 threads ?
 
 **Pièges :**
 

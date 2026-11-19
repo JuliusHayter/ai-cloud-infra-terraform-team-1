@@ -111,13 +111,12 @@ Les montants sont calculés aux prix catalogue, hors gratuité, remises,
 taxes et coûts annexes : PostgreSQL, stockage, réseau et logs.
 Les entraînements Vertex AI et le gate ne sont pas inclus.
 
-## Threads sur Vertex AI (étape 3, 3 mois)
+## Entraînement final sur Vertex AI (étape 3, 12 mois)
 
 Les trois entraînements utilisent une machine `n2-standard-8`,
 les mêmes données de mai à juillet 2026 et les mêmes hyperparamètres.
 
 | Threads | `rows.train` | `load` | `fit` | AP de validation |
-| --- | --- | --- | --- | --- |
 | 1 | 9 228 428 | 238,78 s | 457,23 s | 0,8681 |
 | 4 | 9 228 428 | 227,30 s | 165,20 s | 0,8681 |
 | 8 | 9 228 428 | 226,90 s | 185,16 s | 0,8681 |

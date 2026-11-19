@@ -29,6 +29,8 @@ vous en protège. Vérifiez le nom avant chaque suppression.
 | `docs/seance-3/` | squelette `pubsub.tf`, exemple d'enveloppe push, modèle de compte rendu |
 | `docs/seance-5.md` | énoncé de la séance 5 : réentraîner le scorer en job, recherche parallèle, règle d'entrée au registre |
 | `docs/seance-5/` | squelette `job.tf`, script `custom-job.sh` (Vertex AI), modèle de compte rendu |
+| `docs/seance-6.md` | énoncé de la séance 6 : livrer le challenger par paliers, diagnostiquer une panne, revenir en arrière |
+| `docs/seance-6/` | scripts de livraison (`release.sh`, `shadow.sh`, `validate.sh`, `promote.sh`, `lib.sh`), mesure par révision (`measure.py`), workflow `release.yml`, modèles de `mesures.md`, `post-mortem.md` et `checklist.md` |
 
 ## Outils à installer
 

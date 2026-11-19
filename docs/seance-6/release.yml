@@ -1,0 +1,129 @@
+# À placer dans .github/workflows/release.yml du dépôt applicatif de l'équipe.
+# Déploie une révision de <équipe>-scorer sans trafic, avec un tag : mêmes commandes que release.sh.
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag de la révision (candidate, par exemple)
+        required: true
+        default: candidate
+      model:
+        description: Alias ou version du registre, ou - pour garder le modèle de la révision en service
+        required: true
+        default: "-"
+      env:
+        description: Variables à fixer, séparées par des espaces (CLÉ=VALEUR CLÉ=VALEUR)
+        required: false
+        default: ""
+
+env:
+  TEAM: team1
+  REGION: europe-west1
+  PROJECT: advanced-cloud-ai
+  BUCKET: advanced-cloud-ai-models
+  WIF_PROVIDER: projects/191726065850/locations/global/workloadIdentityPools/github/providers/github-actions
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.TEAM }}-cd@${{ env.PROJECT }}.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy a tagged revision without traffic
+        id: deploy
+        env:
+          TAG: ${{ inputs.tag }}
+          MODEL: ${{ inputs.model }}
+          OVERRIDES: ${{ inputs.env }}
+        run: |
+          set -euo pipefail
+          SERVICE="$TEAM-scorer"
+          [ "$TAG" != champion ] || { echo "le tag champion est réservé"; exit 1; }
+          for pair in $OVERRIDES; do
+            case "$pair" in
+              [A-Z_]*=*) ;;
+              *) echo "variable attendue sous la forme CLÉ=VALEUR en majuscules, reçu : '$pair'"; exit 1 ;;
+            esac
+            case "$pair" in
+              *\;*) echo "le caractère ; est interdit dans '$pair'"; exit 1 ;;
+            esac
+          done
+
+          BASE=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT" \
+            --flatten='status.traffic[]' --format='value(status.traffic.percent,status.traffic.revisionName)' |
+            sort -rn | sed -n '1s/^[^[:space:]]*[[:space:]]*//p')
+          [ -n "$BASE" ] || BASE=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT" \
+            --format='value(status.latestReadyRevisionName)')
+          IMAGE=$(gcloud run revisions describe "$BASE" --region "$REGION" --project "$PROJECT" \
+            --format='value(spec.containers[0].image)')
+          ENV_LIST=$(gcloud run revisions describe "$BASE" --region "$REGION" --project "$PROJECT" \
+            --flatten='spec.containers[].env[]' --format='value(spec.containers.env.name,spec.containers.env.value)' |
+            while IFS=$'\t' read -r name value; do
+              if [ -n "$name" ]; then printf '%s=%s\n' "$name" "$value"; fi
+            done)
+
+          set_var() {
+            ENV_LIST=$(printf '%s\n' "$ENV_LIST" | grep -v "^$1=" || true)
+            ENV_LIST=$(printf '%s\n%s=%s\n' "$ENV_LIST" "$1" "$2" | grep -v '^$')
+          }
+
+          if [ "$MODEL" != "-" ]; then
+            MODEL_ID=$(gcloud ai models list --region "$REGION" --project "$PROJECT" \
+              --filter="displayName=fraud-scorer-$TEAM" --format='value(name)')
+            INFO=$(gcloud ai models describe "${MODEL_ID##*/}@$MODEL" --region "$REGION" --project "$PROJECT" \
+              --format='value(versionId,artifactUri)')
+            URI=${INFO#*$'\t'}
+            URI=${URI%/}
+            case "$URI" in
+              "gs://$BUCKET/"*) ;;
+              *) echo "artefact hors du bucket gs://$BUCKET : $URI"; exit 1 ;;
+            esac
+            set_var MODELS_DIR "/mnt/models/${URI#gs://$BUCKET/}"
+            set_var MODEL_VERSION "${INFO%%$'\t'*}"
+          fi
+          for pair in $OVERRIDES; do
+            set_var "${pair%%=*}" "${pair#*=}"
+          done
+
+          gcloud run deploy "$SERVICE" --region "$REGION" --project "$PROJECT" --quiet \
+            --image "$IMAGE" --no-traffic --tag "$TAG" \
+            --revision-suffix "$TAG-$(date +%m%d%H%M%S)" \
+            --set-env-vars "^;^$(printf '%s' "$ENV_LIST" | tr '\n' ';')"
+
+          INFO=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT" \
+            --flatten='status.traffic[]' \
+            --format='value(status.traffic.tag,status.traffic.revisionName,status.traffic.url)' |
+            awk -F'\t' -v t="$TAG" '$1==t{print $2 "\t" $3; exit}')
+          echo "Révision : ${INFO%%$'\t'*}"
+          echo "Adresse du tag : ${INFO#*$'\t'}"
+          echo "tag_url=${INFO#*$'\t'}" >> "$GITHUB_OUTPUT"
+          echo "service_url=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT" --format='value(status.url)')" >> "$GITHUB_OUTPUT"
+
+      - name: Identity token for the smoke test
+        id: idtoken
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.TEAM }}-cd@${{ env.PROJECT }}.iam.gserviceaccount.com
+          token_format: id_token
+          id_token_audience: ${{ steps.deploy.outputs.service_url }}
+          id_token_include_email: true
+
+      - name: Smoke test /health
+        continue-on-error: true
+        env:
+          TAG_URL: ${{ steps.deploy.outputs.tag_url }}
+          ID_TOKEN: ${{ steps.idtoken.outputs.id_token }}
+        run: |
+          curl -fsS --max-time 30 -H "Authorization: Bearer $ID_TOKEN" "$TAG_URL/health"
