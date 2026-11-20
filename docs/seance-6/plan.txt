@@ -1,0 +1,254 @@
+Attention : template.revision (team1-scorer-next-1120130222, BQ_DATASET=scoring_next, la version en panne) n'est pas la révision qui sert 100 % du trafic (team1-scorer-candidate-1119195742, BQ_DATASET=scoring) : le gabarit courant du service n'est pas celui qui sert ; reconstruire le service depuis ce gabarit recréerait la panne.
+
+google_cloud_run_v2_service.scorer: Preparing import... [id=projects/advanced-cloud-ai/locations/europe-west1/services/team1-scorer]
+google_cloud_run_v2_service.scorer: Refreshing state... [id=projects/advanced-cloud-ai/locations/europe-west1/services/team1-scorer]
+
+Terraform will perform the following actions:
+
+  # google_cloud_run_v2_service.scorer will be imported
+    resource "google_cloud_run_v2_service" "scorer" {
+        annotations             = {}
+        client                  = "gcloud"
+        client_version          = "544.0.0"
+        conditions              = [
+            {
+                execution_reason     = null
+                last_transition_time = "2026-11-20T12:22:27.356106Z"
+                message              = null
+                reason               = null
+                revision_reason      = null
+                severity             = null
+                state                = "CONDITION_SUCCEEDED"
+                type                 = "RoutesReady"
+            },
+            {
+                execution_reason     = null
+                last_transition_time = "2026-11-20T12:22:33.081587Z"
+                message              = "Updating revision scaling succeeded."
+                reason               = null
+                revision_reason      = "RETIRED"
+                severity             = null
+                state                = "CONDITION_SUCCEEDED"
+                type                 = "ConfigurationsReady"
+            },
+        ]
+        create_time             = "2026-11-19T15:26:57.062956Z"
+        creator                 = "<adresse>"
+        custom_audiences        = []
+        default_uri_disabled    = false
+        delete_time             = null
+        deletion_policy         = "DELETE"
+        deletion_protection     = true
+        description             = null
+        effective_annotations   = {}
+        effective_labels        = {
+            "goog-terraform-provisioned" = "true"
+        }
+        etag                    = "\"CIL3gNgGEPDEptcD/cHJvamVjdHMvYWR2YW5jZWQtY2xvdWQtYWkvbG9jYXRpb25zL2V1cm9wZS13ZXN0MS9zZXJ2aWNlcy90ZWFtMS1zY29yZXI\""
+        expire_time             = null
+        generation              = "19"
+        iap_enabled             = false
+        id                      = "projects/advanced-cloud-ai/locations/europe-west1/services/team1-scorer"
+        ingress                 = "INGRESS_TRAFFIC_ALL"
+        invoker_iam_disabled    = false
+        labels                  = {}
+        last_modifier           = "<adresse>"
+        latest_created_revision = "projects/advanced-cloud-ai/locations/europe-west1/services/team1-scorer/revisions/team1-scorer-next-1120130222"
+        latest_ready_revision   = "projects/advanced-cloud-ai/locations/europe-west1/services/team1-scorer/revisions/team1-scorer-next-1120130222"
+        launch_stage            = "GA"
+        location                = "europe-west1"
+        name                    = "team1-scorer"
+        observed_generation     = "19"
+        project                 = "advanced-cloud-ai"
+        reconciling             = false
+        ssh_enabled             = false
+        terminal_condition      = [
+            {
+                execution_reason     = null
+                last_transition_time = "2026-11-20T12:22:27.392304Z"
+                message              = null
+                reason               = null
+                revision_reason      = null
+                severity             = null
+                state                = "CONDITION_SUCCEEDED"
+                type                 = "Ready"
+            },
+        ]
+        terraform_labels        = {}
+        traffic_statuses        = [
+            {
+                percent  = 100
+                revision = "team1-scorer-candidate-1119195742"
+                tag      = "candidate"
+                type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+                uri      = "https://candidate---team1-scorer-ueiaychpgq-ew.a.run.app"
+            },
+            {
+                percent  = 0
+                revision = "team1-scorer-prep-1119180441"
+                tag      = "champion"
+                type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+                uri      = "https://champion---team1-scorer-ueiaychpgq-ew.a.run.app"
+            },
+        ]
+        uid                     = "5950a81e-476b-4613-9479-7d5a44f34586"
+        update_time             = "2026-11-20T12:22:26.988390Z"
+        uri                     = "https://team1-scorer-ueiaychpgq-ew.a.run.app"
+        urls                    = [
+            "https://team1-scorer-191726065850.europe-west1.run.app",
+            "https://team1-scorer-ueiaychpgq-ew.a.run.app",
+        ]
+
+        scaling {
+            manual_instance_count = 0
+            max_instance_count    = 20
+            min_instance_count    = 0
+            scaling_mode          = null
+        }
+
+        template {
+            annotations                      = {}
+            encryption_key                   = null
+            execution_environment            = null
+            gpu_zonal_redundancy_disabled    = false
+            health_check_disabled            = false
+            labels                           = {}
+            max_instance_request_concurrency = 4
+            revision                         = "team1-scorer-next-1120130222"
+            service_account                  = "team1-scorer@advanced-cloud-ai.iam.gserviceaccount.com"
+            session_affinity                 = false
+            timeout                          = "300s"
+
+            containers {
+                args             = []
+                base_image_uri   = null
+                build_info       = []
+                command          = []
+                depends_on       = []
+                image            = "europe-west1-docker.pkg.dev/advanced-cloud-ai/cloud-ai/ref-fraud-api@sha256:f75174064a724b7cbd0f224f54ff45719e486c39692890cc132c7df12f867506"
+                name             = null
+                sandbox_launcher = false
+                working_dir      = null
+
+                env {
+                    name  = "BQ_DATASET"
+                    value = "scoring_next"
+                }
+                env {
+                    name  = "DATA_DIR"
+                    value = "/mnt/models/data"
+                }
+                env {
+                    name  = "FEATURE_READER"
+                    value = "snapshot"
+                }
+                env {
+                    name  = "FEATURE_SOURCE"
+                    value = "bigquery"
+                }
+                env {
+                    name  = "GOOGLE_CLOUD_PROJECT"
+                    value = "advanced-cloud-ai"
+                }
+                env {
+                    name  = "MODELS_DIR"
+                    value = "/mnt/models/runs/team1/models/20261118T192703Z4af774"
+                }
+                env {
+                    name  = "MODEL_VERSION"
+                    value = "2"
+                }
+                env {
+                    name  = "PREPARED_AT"
+                    value = "1119180441"
+                }
+                env {
+                    name  = "SNAPSHOT_TTL_S"
+                    value = "86400"
+                }
+                env {
+                    name  = "WEB_CONCURRENCY"
+                    value = "1"
+                }
+                env {
+                    name  = "XGB_NTHREAD"
+                    value = "1"
+                }
+
+                ports {
+                    container_port = 8000
+                    name           = "http1"
+                }
+
+                resources {
+                    cpu_idle          = false
+                    limits            = {
+                        "cpu"    = "1"
+                        "memory" = "1Gi"
+                    }
+                    startup_cpu_boost = false
+                }
+
+                startup_probe {
+                    failure_threshold     = 60
+                    initial_delay_seconds = 0
+                    period_seconds        = 2
+                    timeout_seconds       = 1
+
+                    http_get {
+                        path = "/health"
+                        port = 8000
+                    }
+                }
+
+                volume_mounts {
+                    mount_path = "/mnt/models"
+                    name       = "models"
+                    sub_path   = null
+                }
+            }
+
+            scaling {
+                concurrency_utilization = 0
+                cpu_utilization         = 0
+                max_instance_count      = 3
+                min_instance_count      = 0
+            }
+
+            volumes {
+                name = "models"
+
+                gcs {
+                    bucket        = "advanced-cloud-ai-models"
+                    mount_options = []
+                    read_only     = true
+                }
+            }
+        }
+
+        traffic {
+            percent  = 100
+            revision = "team1-scorer-candidate-1119195742"
+            tag      = null
+            type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+        }
+        traffic {
+            percent  = 0
+            revision = "team1-scorer-prep-1119180441"
+            tag      = "champion"
+            type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+        }
+        traffic {
+            percent  = 0
+            revision = "team1-scorer-candidate-1119195742"
+            tag      = "candidate"
+            type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+        }
+    }
+
+Plan: 1 to import, 0 to add, 0 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
