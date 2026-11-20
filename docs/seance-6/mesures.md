@@ -100,13 +100,25 @@ référence de l'étape 0.
 | 10 % | 12:34:29 | 12:39:44 | `team1-scorer-candidate-1119195742` | `team1-scorer-prep-1119180441` | 298 / 2 662 | 2,9 / 2,5 | 0,0 % / 0,0 % | 15,4 % / 10,5 % | 1 s (max) | avancer à 50 % | les quatre signaux dans leur seuil d'avancement : p95 ≤ 5 ms, erreurs ≤ 0,5 %, alertes entre 11,4 et 19,4 % (même valeur qu'en ombre), âge < 30 s |
 | 50 % | 12:41:37 | 12:46:41 | `team1-scorer-candidate-1119195742` | `team1-scorer-prep-1119180441` | 1 486 / 1 508 | 2,9 / 2,5 | 0,0 % / 0,0 % | 14,9 % / 10,7 % | 3 s (max, minute du changement) | avancer à 100 % | les quatre signaux dans leur seuil d'avancement ; p95 inchangée avec cinq fois plus de trafic, taux d'alerte stable (15,4 % en ombre et à 10 %) |
 | 100 % | 12:47:17 | 12:52:22 | `team1-scorer-candidate-1119195742` | référence étape 0 (`team1-scorer-prep-1119180441`, 0 livraison) | 2 970 / 0 | 2,8 / 2,6 (réf.) | 0,0 % / 0,0 % (réf.) | 13,9 % / 11,6 % (réf.) | 0 s | palier validé : challenger en service, alias `champion` déplacé | les quatre signaux dans leur seuil d'avancement, sur tout le trafic |
-| Panne (`next` à 10 %) | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
-| Retour (`candidate` ou `champion` à 100 %) | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
+| Panne (`next` à 10 %) | 13:03:01 | 13:08:10 | `team1-scorer-next-1120130222` | `team1-scorer-candidate-1119195742` | 291 / 2 680 | 3,1 / 2,7 | 0,0 % / 0,0 % | 100,0 % / 13,8 % | 2 s (max) | retour arrière (franchissement à 13:05:13, confirmé sur 5 min) | taux d'alerte > 21,4 % : 100 % |
+| Retour (`candidate` ou `champion` à 100 %) | 13:18:59 (fin de la commande lancée à 13:17:25) | 13:22:05 | `team1-scorer-candidate-1119195742` | référence étape 0 ; `next` : 0 livraison | 1 777 / 0 | 2,7 / 2,6 (réf.) | 0,0 % / 0,0 % (réf.) | 12,2 % / 11,6 % (réf.) | 0 s | retour vérifié ; tag `next` retiré à 13:22:27 | les quatre signaux dans leur seuil d'avancement, mesurés sur les 3 min qui suivent la fin du retour arrière |
 
 En ombre : désaccord 8,1 % et écart d'alertes + 4,1 points (`--compare`), sur 4 733 transactions
 communes.
 
-Panne : passage à 10 % à ... ; détection à ... ; délai ... min ; signal : ... (valeur ... , borne ...).
+Panne : passage à 10 % à 13:03:01 ; détection à 13:05:13 (première mesure, fenêtre de 2 min, 113
+transactions de `next`), confirmée à 13:08:10 sur la fenêtre complète de 5 min ; délai 2 min 12 s ;
+signal : taux d'alerte de `next` (valeur 100 %, borne de retour arrière 21,4 %).
+
+Cause : la livraison change une seule variable, `BQ_DATASET=scoring_next`. La révision `next` charge
+un instantané de features vide, sans erreur : `/health` de `next` répond `"status":"ok"`,
+`"dataset":"advanced-cloud-ai.scoring_next"`, `"snapshot_rows":0`, `"snapshot_error":null`, contre
+`"snapshot_rows":895180` sur `scoring` pour `candidate`. Chaque transaction est scorée comme celle
+d'un client et d'un terminal sans historique. Extrait de log `scored` de `next` à 13:05:28 :
+`score 0.077005, decision True, latency_ms 1.69, features_ms 0.61, degraded False`, la même valeur
+0.077005 revenant sur des transactions différentes (features constantes) ; sur `candidate` au même
+moment, scores de 0,0001 à 0,0004 et `decision False`. Score moyen : 0,103 contre 0,008. La lecture
+réussit (elle lit une table vide) : ni erreur, ni mode dégradé, ni hausse de latence.
 
 Alias `champion` du registre déplacé sur la version 2 à 12:52:48 (`champion : version 1 -> version 2` ; `list-version` : version 2 porte `default, challenger, champion`, version 1 n'a plus d'alias).
 
@@ -161,6 +173,16 @@ Alias `champion` du registre déplacé sur la version 2 à 12:52:48 (`champion :
 
 ### Étape 4 — Panne
 
-1. Premier signal sorti de sa bande ; signaux qui n'ont pas bougé : ...
-2. Signal qui aurait suffi seul ; signal qui ne l'aurait jamais vue : ...
-3. Transactions traitées par la révision `next` avant la détection ; ce qu'elle en aurait traité à 100 % : ...
+1. Premier signal sorti de sa bande ; signaux qui n'ont pas bougé : le taux d'alerte, à 100 % dès la
+   première mesure, pour une borne de 21,4 %. N'ont pas bougé : la latence p95 (3,1 ms contre 2,7 ms),
+   le taux d'erreur (0 %), l'âge du plus ancien message (2 s au plus), et hors critères les dégradés
+   (0 %) et `/health` (`status: ok`).
+2. Signal qui aurait suffi seul ; signal qui ne l'aurait jamais vue : le taux d'alerte suffisait
+   seul. La latence ne l'aurait jamais vue (la lecture d'une table vide est aussi rapide), pas plus
+   que le taux d'erreur ni l'âge du plus ancien message : le service fonctionne techniquement, ce sont
+   ses décisions qui sont fausses. Le score moyen par révision (0,103 contre 0,008) l'aurait vue aussi.
+3. Transactions traitées par la révision `next` avant la détection ; ce qu'elle en aurait traité à
+   100 % : 113 transactions avant la détection à 13:05:13, toutes mises en alerte, au lieu d'une
+   douzaine attendue. À 100 %, sur les mêmes 2 min 12 s à 10 messages/s, environ 1 320 transactions,
+   toutes en alerte, soit environ 1 150 fausses alertes de plus. Jusqu'à la confirmation (13:08:10),
+   291 transactions à 10 % contre environ 3 000 à 100 %.
