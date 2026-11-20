@@ -97,9 +97,9 @@ référence de l'étape 0.
 | Palier | Début | Fin | Révision mesurée | Révision de comparaison | `tx distinctes` (mesurée / comparaison) | p95 ms (mesurée / comparaison) | Erreurs (mesurée / comparaison) | Alertes (mesurée / comparaison) | Âge du plus ancien message | Décision | Critère invoqué |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Ombre (0 %) | ≈ 19:52 | ≈ 20:00 | `team1-scorer-candidate-1119194814` (puis `…1119195742`) | `team1-scorer-prep-1119180441` | 4 642 / 4 751 | 3,2 / 2,5 | 0,0 % / 0,0 % | 15,4 % / 11,4 % | ... s (à lire) | avancer au palier 10 % | p95 ≤ 5 ms, erreurs ≤ 0,5 % ; alertes dans la borne recentrée après l'ombre |
-| 10 % | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
-| 50 % | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
-| 100 % | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
+| 10 % | 12:34:29 | 12:39:44 | `team1-scorer-candidate-1119195742` | `team1-scorer-prep-1119180441` | 298 / 2 662 | 2,9 / 2,5 | 0,0 % / 0,0 % | 15,4 % / 10,5 % | 1 s (max) | avancer à 50 % | les quatre signaux dans leur seuil d'avancement : p95 ≤ 5 ms, erreurs ≤ 0,5 %, alertes entre 11,4 et 19,4 % (même valeur qu'en ombre), âge < 30 s |
+| 50 % | 12:41:37 | 12:46:41 | `team1-scorer-candidate-1119195742` | `team1-scorer-prep-1119180441` | 1 486 / 1 508 | 2,9 / 2,5 | 0,0 % / 0,0 % | 14,9 % / 10,7 % | 3 s (max, minute du changement) | avancer à 100 % | les quatre signaux dans leur seuil d'avancement ; p95 inchangée avec cinq fois plus de trafic, taux d'alerte stable (15,4 % en ombre et à 10 %) |
+| 100 % | 12:47:17 | 12:52:22 | `team1-scorer-candidate-1119195742` | référence étape 0 (`team1-scorer-prep-1119180441`, 0 livraison) | 2 970 / 0 | 2,8 / 2,6 (réf.) | 0,0 % / 0,0 % (réf.) | 13,9 % / 11,6 % (réf.) | 0 s | palier validé : challenger en service, alias `champion` déplacé | les quatre signaux dans leur seuil d'avancement, sur tout le trafic |
 | Panne (`next` à 10 %) | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
 | Retour (`candidate` ou `champion` à 100 %) | ... | ... | ... | ... | ... / ... | ... / ... | ... / ... | ... / ... | ... | ... | ... |
 
@@ -108,7 +108,7 @@ communes.
 
 Panne : passage à 10 % à ... ; détection à ... ; délai ... min ; signal : ... (valeur ... , borne ...).
 
-Alias `champion` du registre déplacé sur la version ... à ... .
+Alias `champion` du registre déplacé sur la version 2 à 12:52:48 (`champion : version 1 -> version 2` ; `list-version` : version 2 porte `default, challenger, champion`, version 1 n'a plus d'alias).
 
 ## Réponses aux questions
 
@@ -141,9 +141,23 @@ Alias `champion` du registre déplacé sur la version ... à ... .
 
 ### Étape 3 — Paliers
 
-1. Transactions distinctes du candidat à 10 %, et si elles suffisent pour juger son taux d'alerte : ...
-2. Signal le plus proche du seuil de retour arrière, et à quel palier : ...
-3. Effet de `promote.sh` sur le trafic, et rôle de l'alias du registre : ...
+1. Transactions distinctes du candidat à 10 %, et si elles suffisent pour juger son taux d'alerte :
+   298. Sur 298 transactions à 15 %, l'écart-type du taux d'alerte est d'environ 2 points : le
+   hasard seul le fait varier d'environ ± 4 points. C'est assez pour repérer un défaut grossier
+   (un taux qui double ou s'effondre), pas pour juger une différence fine ; nos bornes (± 4 points
+   pour avancer, ± 6 pour revenir) sont taillées pour cette taille. La mesure n'est solide qu'à
+   50 % (1 486 transactions, 14,9 %) et à 100 % (2 970, 13,9 %), cohérente avec l'ombre.
+2. Signal le plus proche du seuil de retour arrière, et à quel palier : le taux d'alerte, au palier
+   10 % (15,4 %, à 6 points du seuil recentré de 21,4 %). Les autres sont restés loin : p95 au plus
+   2,9 ms pour un seuil de 10 ms, 0 erreur, âge au plus 3 s pour 60 s. Avec la borne provisoire
+   d'avant l'ombre (17,5 %), il n'en aurait été qu'à 2,1 points : sans l'ombre, un écart qui vient
+   du modèle aurait pu déclencher un retour arrière.
+3. Effet de `promote.sh` sur le trafic, et rôle de l'alias du registre : aucun, le trafic était
+   déjà à 100 % sur `candidate` et n'a pas bougé. L'alias dit quelle version du modèle est la
+   référence officielle pour tout ce qui lit le registre : la prochaine validation comparera un
+   futur challenger à `@champion`, un redéploiement ou une reconstruction partira de `@champion`,
+   et il trace la décision de mise en service. Le tag Cloud Run dit qui sert le trafic ; l'alias
+   dit quel modèle on considère comme le bon.
 
 ### Étape 4 — Panne
 
