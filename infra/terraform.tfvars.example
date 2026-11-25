@@ -1,4 +1,15 @@
-team     = "team1"
-image    = "europe-west1-docker.pkg.dev/advanced-cloud-ai/cloud-ai/team1-fraud-api:v1"
-invokers = ["user:prenom@albertschool.com"]
-tx_topic = "projects/cymbal-fraudfinder/topics/ff-tx"
+# Valeurs en service (séances 4 et 5) : copier en terraform.tfvars, puis remplacer les adresses.
+# Avec ces valeurs, terraform plan doit répondre « No changes ».
+team           = "team1"
+image          = "europe-west1-docker.pkg.dev/advanced-cloud-ai/cloud-ai/ref-fraud-api:td4"
+feature_source = "parquet"
+invokers = [
+  "user:prenom1@albertschool.com",
+  "user:prenom2@albertschool.com"
+]
+train_module   = "train.search"
+search_workers = 4
+threads        = 4
+train_cpu      = "4"
+train_memory   = "8Gi"
+tx_topic       = "projects/cymbal-fraudfinder/topics/ff-tx"
